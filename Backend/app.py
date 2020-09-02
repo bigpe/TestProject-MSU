@@ -41,7 +41,7 @@ def preSignIn():
     if 'l' in data and 'p' in data:
         if checkAuth(data['l'], data['p']):
             status = '0'
-            message = 'Успешная авторизация'  # Устанавливаем куки PreAuthorized на 1 минуту
+            message = 'Успешная авторизация'  # Устанавливаем куки PreAuthorized
             cookie = ['PreAuthorized', '1', datetime.timedelta(minutes=cookieTimeMinutes)]
         else:
             message = 'Неправильные данные'
@@ -55,7 +55,7 @@ def preSignIn():
 @app.route('/signin', methods=['POST'])
 def signIn():
     if request.cookies.get('PreAuthorized'):
-        res = make_response(sRedirect())
+        res = make_response(sRedirect())  # Устанавливаем куки Authorized
         res.set_cookie('Authorized', '1', datetime.timedelta(minutes=cookieTimeMinutes))
         return res
     return redirect('/')
