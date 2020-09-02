@@ -12,6 +12,7 @@ app.config['SECRET_KEY'] = secretKey
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
 csrf.init_app(app)
+cookieTimeMinutes = 10
 
 
 # Модели базы данных
@@ -41,7 +42,7 @@ def preSignIn():
         if checkAuth(data['l'], data['p']):
             status = '0'
             message = 'Успешная авторизация'  # Устанавливаем куки PreAuthorized на 1 минуту
-            cookie = ['PreAuthorized', '1', datetime.timedelta(minutes=1)]
+            cookie = ['PreAuthorized', '1', datetime.timedelta(minutes=cookieTimeMinutes)]
         else:
             message = 'Неправильные данные'
     r = json.dumps({'status': status, 'message': message})
@@ -55,7 +56,7 @@ def preSignIn():
 def signIn():
     if request.cookies.get('PreAuthorized'):
         res = make_response(sRedirect())
-        res.set_cookie('Authorized', '1', datetime.timedelta(minutes=1))
+        res.set_cookie('Authorized', '1', datetime.timedelta(minutes=cookieTimeMinutes))
         return res
     return redirect('/')
 
