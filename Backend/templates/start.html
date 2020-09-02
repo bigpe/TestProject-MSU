@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Приветственный экран</title>
+    <link href="/static/css/main.css" rel="stylesheet">
+    <script src="/static/main.js"></script>
+    <script src="/static/jquery-3.4.1.min.js"></script>
+</head>
+<body background = "#DCDCDC">
+	<h1> Приветственный экран </h1>
+    
+    <!-- делаем тут методом HTML-форм -->
+    
+    <p id="info"> {{message}} </p>
+    
+	
+
+	<input type="text" id="login">
+	<input type="password" id="password">
+	<input type="button" value="Войти" onclick="Check_auth()">
+	
+	<form method="post" action='/signin' id="auth_form">
+		<input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}"/>
+		<input type="hidden" name="login" id="r_login">
+		<input type="hidden"name="password" id="r_password">
+	</form>
+	
+	<input onclick="RegistrationForm()" type="button" value="Регистрация" id="show_reg">
+	
+	<div id="popup_body" onclick="Popup_close()">
+	</div>
+	<div id="popup">
+		<p id='popup_info'></p>
+		<p> Введите Ваше ФИО </p>
+		<input type="text" id="FIO" value="">
+		<p> Придумайте логин </p>
+		<input type="text" id="n_login" value="">
+		<p> Придумайте пароль </p>
+		<input type="password" id="n_password" value="">
+		<input type="button" value="Регистрация" onclick="Register()">
+		<form method="post" action='/'>
+			<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+			<input type="hidden" id="h_login" name="h_login">
+			<input type="hidden" id="h_password" name="h_password">
+			<input type="hidden" value="">
+		</form>
+	</div>
+
+
+    <div id="footer">
+    	<p> Демонстративная версия </p>
+    	<p> Copyright &copy; МГУ 2020 Все права защищены </p>
+    </div>
+</body>
+</html>
