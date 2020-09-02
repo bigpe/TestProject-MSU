@@ -27,6 +27,8 @@ db.create_all()  # Создаем базу данных со вложенным�
 
 @app.route('/')
 def index():
+    if checkSession(request.cookies):  # Если пользователь авторизован, переадресовываем
+        return make_response(sRedirect())
     return render_template('start.html')
 
 
@@ -52,10 +54,14 @@ def preSignIn():
 @app.route('/signin', methods=['POST'])
 def signIn():
     if request.cookies.get('PreAuthorized'):
-        res = make_response(redirect('https://yandex.ru'))
+        res = make_response(sRedirect())
         res.set_cookie('Authorized', '1', datetime.timedelta(minutes=1))
         return res
     return redirect('/')
+
+
+def sRedirect():
+    return redirect('https://yandex.ru')
 
 
 @app.route('/reg', methods=['POST'])
