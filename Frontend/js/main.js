@@ -79,8 +79,8 @@ function settings(node){
 function addDocuments(node){
     let mainFile = node.find('#mainDoc')[0].files.length;
     let secFile = node.find('#secDoc')[0].files.length;
-    if (!mainFile && !secFile){
-        showMessage('Вы должны отправить документы');
+    if (!mainFile){
+        showMessage('Вы должны предоставить документ основание');
         return false;
     }
     let formData = serializeFormToObject(node);
@@ -111,13 +111,15 @@ function loadDocuments(){
         for (let i = 0; i < documents.length; i++){
             let document = documents[i]['document'];
             $('#documentsList').append("<div id='" + documents[i]['id']  + "' class='documentBlock'></div>");
+            $('.documentBlock').last().append('<div class="fileTitle">' + documents[i]['document']['mainDocName'] + '</div>')
             for (let field in document){
-                $('#documentsList' + ' .documentBlock').prepend('<div hidden>' + documents[i]['document'][field] + '</div>');
+                $('#documentsList' + ' .documentBlock').last()
+                    .addClass('primary').prepend('<div hidden>' + documents[i]['document'][field] + '</div>');
             }
             $('#' + documents[i]['id']).append('<div class="btnGroup"><button class="backButton delete" ' +
                 'onclick="deleteDocument($(this));">' +
                 '<i class="fas fa-trash-alt"></i></button> ' +
-                '<button class="backButton status" onclick="location.hash = \'#addDocument\'">' +
+                '<button class="backButton status" onclick="changeStatus($(this));">' +
                 '<i class="fas fa-check-square"></i></button>' +
                 '<button class="backButton change" onclick="location.hash = \'#addDocument\'">' +
                 '<i class="fas fa-pencil-alt"></i></button></div>');
@@ -429,7 +431,10 @@ function fileUpload(node){
 function deleteDocument(node){
     let parentNode = node.parent().parent();
     let id = parentNode.attr('id');
-    parentNode.remove();
+    parentNode.fadeOut(500, 'linear', function (){
+        parentNode.remove();
+    });
+    parentNode.css('transform', 'translate(50vw, 0px)');
     deleteDataBaseData('documents', id);
 }
 
@@ -438,4 +443,19 @@ function deleteDataBaseData(tableName, key){
     let objectStore = t.objectStore(tableName);
     objectStore.delete(parseInt(key));
     t.commit();
+}
+function changeStatus(node){
+    let parent = node.parent().parent();
+    let parentClass = parent.attr('class');
+    parent.removeClass(parentClass.split(' ', ).pop()).addClass('success');
+    if ($('.documentBlock').length > 1) {
+        parent.fadeOut(500, 'linear', function () {
+            $('#documentsList').append(parent);
+            parent.show();
+            parent.css('transform', 'translate(0px, 0px)');
+            $('.documentBlock').css('transform', 'translate(0px, 0px)');
+        });
+        $('.documentBlock').css('transform', 'translate(0px, 15px)');
+        parent.css('transform', 'translate(50vw, 0px)');
+    }
 }
