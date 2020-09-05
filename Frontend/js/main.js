@@ -288,9 +288,7 @@ function checkSession(){
 }
 
 function getCookie(name){
-    if (!document.cookie.search('authorized') > 0)
-        return false;
-    if (document.cookie.split('serverSide').length)
+    if (!document.cookie.split('serverSide'))
         return document.cookie.split(name + '=')[1].split(';')[0];
     return false;
 }
