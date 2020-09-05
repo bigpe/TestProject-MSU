@@ -1,2 +1,5 @@
 /Backend/app.db
+/Backend/.idea
+/Backend/__pycache__
+.idea
 /venv
