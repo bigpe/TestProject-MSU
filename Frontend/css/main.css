@@ -1,0 +1,207 @@
+html{
+    margin: 0;
+    padding: 0;
+    font-family: Open Sans, sans-serif;
+}
+body{
+    margin: 0;
+    padding: 0;
+    background: #eeeeee4a;
+}
+.mainBlock, #signIn, #signUp, #settings, #addDocument, #documents{
+    display: grid;
+    align-content: center;
+    text-align: center;
+}
+.mainBlock{
+    min-height: 100vh;
+}
+#signIn, #signUp, #settings, #tables, #addDocument, #documents{
+    margin-bottom: 50px;
+    margin-top: 50px;
+    display: none;
+    width: 100%;
+    animation-name: fadeIn;
+    animation-duration: .5s;
+}
+
+@keyframes fadeIn {
+    0%{opacity: 0;}
+    100%{opacity: 1;}
+}
+
+form {
+    display: grid;
+    width: 500px;
+    margin: auto;
+    max-width: 90vw;
+}
+form input{
+    text-align: center;
+    height: 35px;
+    border: none;
+    margin-bottom: 10px;
+    outline: none;
+}
+form button, .backButton{
+    min-height: 50px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+form button{
+    color: #00af86 !important;
+}
+.backButton{
+    border-radius: 15px;
+    color: crimson;
+}
+form button:hover, .backButton:hover{
+    background: #e0dfdf;
+}
+#message{
+    height: 50px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: aliceblue;
+    opacity: 0;
+    transition: opacity .5s ease;
+    position: fixed;
+    width: 100%;
+    z-index: 998;
+}
+#popUp{
+    filter: opacity(90%);
+    height: 20%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: aliceblue;
+    opacity: 0;
+    transition: opacity .5s ease;
+    position: fixed;
+    width: 40%;
+    top: 40%;
+    left: 30%;
+    border-radius: 10px;
+    z-index: 998;
+    box-shadow: 2px 2px 10px 2px lightgray;
+    border: 2px solid white;
+}
+#popUp i, #message i{
+    margin-right: 10px;
+}
+.showBlock{
+    transition: all .5s ease;
+    opacity: 1 !important;
+}
+.navBtn{
+    margin-top: 15px;
+}
+.pageTitle{
+    font-weight: bold;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    animation-name: fadeIn;
+    animation-duration: 2s;
+    min-height: 50px;
+}
+.secondBlock{
+    border-radius: 5px;
+    padding: 20px;
+    width: 600px;
+    max-width: 90vw;
+    margin: auto;
+    background: #bbbbbb1a;
+    box-shadow: 1px 1px 5px 1px lightgray
+}
+.headerBtn, .headerBtnPrim{
+    display: flex;
+    position: fixed;
+    width: 50%;
+    top: 10px;
+    height: 25px;
+    z-index: 998;
+}
+.headerBtn{
+    justify-content: flex-end;
+    right: 20px;
+}
+.headerBtnPrim{
+    justify-content: flex-start;
+    left: 20px;
+}
+.headerBtnPrim button{
+    margin-left: 5px;
+    width: 50px;
+}
+.headerBtnPrim .active{
+    color: #00af86;
+}
+.headerBtnPrim .inactive{
+    color: crimson;
+}
+.headerBtn button{
+    margin-right: 5px;
+    width: 50px;
+}
+.fileUploader{
+    height: 50px;
+    width: 100%;
+    margin: 15px auto 15px  auto;
+    background: white;
+    border: 2px dashed #bbb8b8;
+    border-radius: 15px;
+    opacity: .5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+}
+.fileUploader:hover{
+    opacity: 1;
+}
+.activeUploader{
+    opacity: 1;
+    background: #daffda;
+}
+form label{
+    margin-bottom: 20px;
+}
+.group{
+    display: grid;
+    width: 90%;
+    margin: auto;
+    background: #ebebeb;
+    padding: 20px;
+    margin-bottom: 10px;
+}
+.documentBlock{
+
+}
+.btnGroup{
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.btnGroup .backButton{
+    margin-left: 10px;
+    margin-right: 10px;
+    min-height: 35px;
+    font-size: .9rem;
+}
+.btnGroup .delete{
+    color: crimson;
+}
+.btnGroup .status{
+    color: #00af86;
+}
+.btnGroup .change{
+    color: #e59800;
+}
+form .backButton{
+    color: crimson;
+}

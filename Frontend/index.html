@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/FontAwesome.js" data-auto-replace-svg="nest"></script>
+    <script src="js/jquery.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <title>Система для хранения и управления документацией</title>
+</head>
+<body>
+<div class="mainBlock">
+    <div id="message"></div>
+    <div id="popUp"></div>
+    <div class="headerBtnPrim">
+        <button class="inactive" id="serverSide" onclick="changeServerSideActive(this)">
+            <i class="fas fa-globe-americas"></i>
+        </button>
+    </div>
+    <div id="signIn">
+        <div class="secondBlock">
+            <div class="pageTitle">Авторизация</div>
+            <form action="/signIn" method="POST" reffer="#documents" onsubmit="return signIn(this)">
+                <input type="text" name="l" placeholder="Введите логин">
+                <input type="password" name="p" placeholder="Введите пароль">
+                <button type="submit">Войти <i class="fas fa-sign-in-alt"></i></button>
+            </form>
+            <div class="navBtn">
+                <button class="backButton" onclick="location.hash = '#signUp'">
+                    Нет учетной записи?
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="signUp">
+        <div class="secondBlock">
+            <div class="pageTitle">Регистрация</div>
+            <form action="/signUp" method="POST" reffer="#signIn" onsubmit="return signUp(this)">
+                <input type="text" name="l" placeholder="Введите логин">
+                <input type="password" name="p" placeholder="Введите пароль">
+                <input type="password" name="pV" placeholder="Введите пароль еще раз">
+                <button type="submit">Зарегестрироваться <i class="fas fa-user-plus"></i></button>
+            </form>
+            <div class="navBtn">
+                <button class="backButton" onclick="location.hash = '#signIn'">
+                    Есть учетная запись?
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="documents">
+        <div class="headerBtn">
+            <button onclick="location.hash = '#settings'"><i class="fas fa-user-cog"></i></button>
+            <button onclick="location.hash = '#'; logOut()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        <div class="secondBlock">
+            <div class="pageTitle">Список документов</div>
+            <div id="documentsList"></div>
+            <div class="navBtn">
+                <form onsubmit="return false;">
+                    <button class="backButton" onclick="location.hash = '#addDocument'">
+                        <i class="fas fa-plus-circle"></i> Добавить новый
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="addDocument">
+        <div class="headerBtn">
+            <button onclick="location.hash = '#settings'"><i class="fas fa-user-cog"></i></button>
+            <button onclick="location.hash = '#'; logOut()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        <div class="secondBlock">
+            <div class="pageTitle">Добавить документ</div>
+            <form action="/addDocuments" method="POST" reffer="#documents" onsubmit="return addDocuments($(this));">
+                <div class="group">
+                    <div class="group" onchange="fileUpload($(this));">
+                        <input type="file" accept="application/pdf,application/msword,
+                        application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                               name="mainDoc" id="mainDoc" hidden>
+                        <div class="fileUploader" onclick="$('#mainDoc').click();">+ Документ основание</div>
+                        <input type="text" name="mainDocName" class="docName" hidden>
+                    </div>
+                    <input type="text" name="mainPeriod" placeholder="Переодичность предоставления" required>
+                    <label>Контактное лицо от учереждения</label>
+                    <input type="text" name="fullName" placeholder="ФИО" required>
+                    <input type="text" name="phone" placeholder="Телефон" required>
+                    <input type="text" name="email" placeholder="Почта" required>
+                </div>
+                <div class="group">
+                    <div class="group" onchange="fileUpload($(this));">
+                        <input type="file" accept="application/pdf,application/msword,
+                        application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                               name="secDoc" id="secDoc" hidden>
+                        <div class="fileUploader" onclick="$('#secDoc').click();">+ Отчетный документ</div>
+                        <input type="text" name="secDocName" class="docName" hidden>
+                    </div>
+                    <input type="text" name="secPeriod" placeholder="Переодичность предоставления" required>
+                    <input type="text" name="destination" placeholder="Адресат" required>
+                    <input type="text" name="performer" placeholder="Текущий исполнитель" required>
+                </div>
+                <button type="submit">Добавить документ <i class="fas fa-file-alt"></i></button>
+            </form>
+            <div class="navBtn">
+                <button class="backButton" onclick="location.hash = '#documents'">
+                    <i class="fas fa-undo-alt"></i> Список документов
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="settings">
+        <div class="headerBtn">
+            <button onclick="location.hash = '#settings'"><i class="fas fa-user-cog"></i></button>
+            <button onclick="location.hash = '#'; logOut()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        <div class="secondBlock">
+            <div class="pageTitle">Настройки</div>
+            <form action="/settings" reffer="#documents" onsubmit="return settings(this)">
+                <input type="password" name="p" placeholder="Введите пароль">
+                <input type="password" name="pV" placeholder="Введите пароль еще раз">
+                <button type="submit">Изменить пароль <i class="fas fa-lock"></i></button>
+            </form>
+            <div class="navBtn">
+                <button class="backButton" onclick="location.hash = '#documents'">
+                    <i class="fas fa-undo-alt"></i> Назад
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="js/main.js"></script>
+</html>
