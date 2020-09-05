@@ -34,13 +34,13 @@ function changeServerSideActive(node){
         node.setAttribute('class', 'inactive');
         showMessage('Серверная часть выключена', 'err', false);
         serverSideActive = false;
+        loadDocuments();
     }
     if (status === 'inactive') {
         setCookie('serverSide', '1');
         node.setAttribute('class', 'active');
         showMessage('Серверная часть включена', 'msg', false);
         serverSideActive = true;
-        loadDocuments();
     }
 }
 
@@ -211,7 +211,7 @@ function authUser(login, password){
     if (!serverSideActive) {  // Если серверная сторона не активирована //localStorage.getItem(login) === password
        if (localStorage.getItem(login) === password) {  // Проверяем наличие пары Логин: Пароль в локальном храналище
             showMessage('Успешная авторизация', 'msg', false);
-            setCookie('authorized', login, 30);
+            setCookie('authorized', login, 60 * 48);
             currentUser = login;
             getPreviousState();
             return true;
@@ -278,7 +278,7 @@ function setCookie(key, value, minutes){
 
 function checkSession(){
     let c = document.cookie;
-    if (c.search('authorized') > 0) {
+    if (c.search('authorized') !== -1) {
         currentUser = getCookie('authorized');
         currentPage = authorizedStartPage;
         location.hash = authorizedStartPage;
