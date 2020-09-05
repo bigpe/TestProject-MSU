@@ -91,7 +91,7 @@ function addDocuments(node){
 
 function saveDocument(formData){
     if (!serverSideActive){
-        updateDataBase('documents', formData);
+        updateDataBaseData('documents', formData);
         loadDocuments();
         showMessage('Документ успешно сохранен', 'msg', false);
         return true;
@@ -110,11 +110,12 @@ function loadDocuments(){
         $('#documentsList').text('');
         for (let i = 0; i < documents.length; i++){
             let document = documents[i]['document'];
-            $('#documentsList').append("<div id='" + documents[i]['id']  + "' class='group documentBlock'></div>");
+            $('#documentsList').append("<div id='" + documents[i]['id']  + "' class='documentBlock'></div>");
             for (let field in document){
                 $('#documentsList' + ' .documentBlock').prepend('<div hidden>' + documents[i]['document'][field] + '</div>');
             }
-            $('#documentsList').append('<div class="btnGroup"><button class="backButton delete" onclick="location.hash = \'#addDocument\'">' +
+            $('#' + documents[i]['id']).append('<div class="btnGroup"><button class="backButton delete" ' +
+                'onclick="deleteDocument($(this));">' +
                 '<i class="fas fa-trash-alt"></i></button> ' +
                 '<button class="backButton status" onclick="location.hash = \'#addDocument\'">' +
                 '<i class="fas fa-check-square"></i></button>' +
@@ -389,7 +390,7 @@ function loadDataBase(){
     })
 }
 
-function updateDataBase(tableName, data){
+function updateDataBaseData(tableName, data){
     let t = db.transaction([tableName], 'readwrite');
     let objectStore = t.objectStore(tableName);
     objectStore.put(data);
@@ -423,4 +424,18 @@ function fileUpload(node){
     let fileName = node.find('input[type="file"]')[0].files[0].name;
     node.find('.fileUploader').addClass('activeUploader').text(fileName);
     node.find('.docName').val(fileName);
+}
+
+function deleteDocument(node){
+    let parentNode = node.parent().parent();
+    let id = parentNode.attr('id');
+    parentNode.remove();
+    deleteDataBaseData('documents', id);
+}
+
+function deleteDataBaseData(tableName, key){
+    let t = db.transaction([tableName], 'readwrite');
+    let objectStore = t.objectStore(tableName);
+    objectStore.delete(parseInt(key));
+    t.commit();
 }

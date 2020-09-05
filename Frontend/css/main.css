@@ -179,13 +179,19 @@ form label{
     margin-bottom: 10px;
 }
 .documentBlock{
-
+    display: grid;
+    width: 90%;
+    margin: auto;
+    margin-bottom: auto;
+    background: #f2f2f2;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 20px;
 }
 .btnGroup{
     display: flex;
     width: 100%;
     justify-content: center;
-    margin-bottom: 10px;
 }
 .btnGroup .backButton{
     margin-left: 10px;
