@@ -288,7 +288,7 @@ function checkSession(){
 }
 
 function getCookie(name){
-    if (!document.cookie.split(name))
+    if (document.cookie.split(name).length > 1)
         return document.cookie.split(name + '=')[1].split(';')[0];
     return false;
 }
@@ -347,14 +347,16 @@ function changePassword(login, password){
 }
 
 function getPreviousState(){
-    if(getCookie('serverSide') == '0') {
+    if(getCookie('serverSide') === '0') {
         serverSideActive = false;
         $('#serverSide').attr('class', 'inactive');
     }
-    else {
+    else if(getCookie('serverSide') === '1') {
         serverSideActive = true;
         $('#serverSide').attr('class', 'active');
     }
+    else
+        setCookie('serverSide', '0');
     if (checkSession()) {
         currentPage = authorizedStartPage;
         showMessage('Добро пожаловать ' + currentUser, 'msg', false);
