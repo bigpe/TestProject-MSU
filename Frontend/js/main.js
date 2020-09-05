@@ -288,7 +288,7 @@ function checkSession(){
 }
 
 function getCookie(name){
-    if (!document.cookie.split('serverSide'))
+    if (!document.cookie.split(name))
         return document.cookie.split(name + '=')[1].split(';')[0];
     return false;
 }
