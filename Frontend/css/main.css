@@ -220,3 +220,18 @@ form .backButton{
 .headerBtn button:nth-child(2){
    color: crimson;
 }
+@keyframes blinkAnim {
+    0% {
+        background: linear-gradient(to right, #bbbbbb1a 8%, white 18%, #bbbbbb1a 33%);
+        background-position: 0;
+    }
+    100% {
+        background: linear-gradient(to right, #bbbbbb1a 8%, white 18%, #bbbbbb1a 33%);
+        background-position: 38vw;
+    }
+}
+
+.loadingBlock {
+    animation: .5s linear;
+    animation-name: blinkAnim;
+}

@@ -104,6 +104,7 @@ function saveDocument(formData){
 }
 
 function loadDocuments(){
+    $('#documents').find('.secondBlock').addClass('loadingBlock');
     getDataBaseData('documents').then(result =>{ // Получаем значения
         let documents = result.filter(r => r['l'] === currentUser); // документов для текущего пользователя
         $('#documentsList').text('');
@@ -362,6 +363,8 @@ function getPreviousState(){
         showMessage('Добро пожаловать ' + currentUser, 'msg', false);
         if (!serverSideActive)  // Загружаем список документов из indexedDB только если серверная часть отключена
             loadDocuments();
+        else
+            $('#documents').find('.secondBlock').removeClass('loadingBlock');
     }
     else
         currentPage = startPage;
