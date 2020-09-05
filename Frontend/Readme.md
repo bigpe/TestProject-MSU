@@ -1,3 +1,5 @@
-## Live Demo
+## Frontend Part
 
-``https://bigpe.github.io/TestProject-MGU-/Frontend/``
+**You can try it yourself at live demo**
+
+[Live Demo](https://bigpe.github.io/TestProject-MGU-/Frontend/)
