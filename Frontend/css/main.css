@@ -9,7 +9,7 @@ body{
     padding: 0;
     background: #eeeeee4a;
 }
-.mainBlock, #signIn, #signUp, #settings, #addDocument, #documents{
+.mainBlock, #signIn, #signUp, #settings, #addDocument, #documents, #editDocument{
     display: grid;
     align-content: center;
     text-align: center;
@@ -17,7 +17,7 @@ body{
 .mainBlock{
     min-height: 100vh;
 }
-#signIn, #signUp, #settings, #tables, #addDocument, #documents{
+#signIn, #signUp, #settings, #tables, #addDocument, #documents, #editDocument{
     margin-bottom: 50px;
     margin-top: 50px;
     display: none;
@@ -40,7 +40,7 @@ form {
 form input{
     text-align: center;
     height: 35px;
-    border: none;
+    border: 1px dashed lightgray;
     margin-bottom: 10px;
     outline: none;
 }
@@ -115,7 +115,7 @@ form button:hover, .backButton:hover{
     max-width: 90vw;
     margin: auto;
     background: #bbbbbb1a;
-    box-shadow: 1px 1px 5px 1px lightgray
+    box-shadow: 1px 1px 1px 1px lightgray;
 }
 .headerBtn, .headerBtnPrim{
     display: flex;
@@ -165,8 +165,8 @@ form button:hover, .backButton:hover{
     opacity: 1;
 }
 .activeUploader{
-    opacity: 1;
-    background: #daffda;
+    opacity: .5;
+    background: #d9ffd9;
 }
 form label{
     margin-bottom: 20px;
@@ -175,7 +175,7 @@ form label{
     display: grid;
     width: 90%;
     margin: auto;
-    background: #ebebeb;
+    background: #fff;
     padding: 20px;
     margin-bottom: 10px;
 }
@@ -191,14 +191,14 @@ form label{
 }
 .btnGroup{
     display: flex;
-    width: 100%;
-    justify-content: center;
+    width: 50%;
+    margin: auto;
 }
 .btnGroup .backButton{
     margin-left: 10px;
     margin-right: 10px;
-    min-height: 35px;
-    font-size: .9rem;
+    min-height: 25px;
+    font-size: .8rem;
 }
 .btnGroup .delete{
     color: crimson;
@@ -222,7 +222,7 @@ form .backButton{
     background: #e59800;
 }
 .primary{
-    background: #d4d4d4;;
+    background: #525252;;
 }
 .gr{
     color: #00af86;

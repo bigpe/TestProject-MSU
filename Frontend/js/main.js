@@ -1,12 +1,13 @@
 var startPage = '#signIn';  // Стартовая страница
 var authorizedStartPage = '#documents'; // Стартовая страница для авторзинованного пользователя
 var pages = ['#signIn', '#signUp']; // ID страниц, которые используются в приложении
-var authorizedPages = ['#documents', '#settings', "#addDocument"]  // ID страниц для авторизированных пользователей
+var authorizedPages = ['#documents', '#settings', "#addDocument", '#editDocument']  // ID страниц для авторизированных пользователей
 var messageDisplayed = false;
 var currentUser;
 var currentPage;
 var serverSideActive = false; // Когда серверная часть будет включена, приложение начнет отправлять пост запросы
 var db;
+var idForUpdate = null;
 loadDataBase().then(result => {
     db = result;
 })
@@ -77,7 +78,7 @@ function settings(node){
 }
 
 function addDocuments(node){
-    let mainFile = node.find('#mainDoc')[0].files.length;
+    let mainFile = node.find('input[name="mainDocName"]').val();
     let secFile = node.find('#secDoc')[0].files.length;
     if (!mainFile){
         showMessage('Вы должны предоставить документ основание');
@@ -88,12 +89,40 @@ function addDocuments(node){
         changeHashByNodeReff(node[0]);
     return false;
 }
+function editDocument(node){
+    let mainFile = node.find('input[name="mainDocName"]').val();
+    let secFile = node.find('#secDoc')[0].files.length;
+    if (!mainFile){
+        showMessage('Вы должны предоставить документ основание');
+        return false;
+    }
+    let formData = serializeFormToObject(node);
+    if (updateDocument(formData))
+        changeHashByNodeReff(node[0]);
+    return false;
+}
+
+function updateDocument(formData){
+    if (!serverSideActive){
+        updateDataBaseData('documents', formData, true);
+        loadDocuments();
+        showMessage('Документ успешно обновлен', 'msg', false);
+        $('#editDocument input[type="file"]').val('');
+        return true;
+    }
+    if (serverSideActive){
+        let form = $(currentPage + ' form');
+        sendToBack(form);
+    }
+    return false;
+}
 
 function saveDocument(formData){
     if (!serverSideActive){
         updateDataBaseData('documents', formData);
         loadDocuments();
         showMessage('Документ успешно сохранен', 'msg', false);
+        $(currentPage + ' form')[0].reset();
         return true;
     }
     if (serverSideActive){
@@ -107,24 +136,51 @@ function loadDocuments(){
     $('#documents').find('.secondBlock').addClass('loadingBlock');
     getDataBaseData('documents').then(result =>{ // Получаем значения
         let documents = result.filter(r => r['l'] === currentUser); // документов для текущего пользователя
-        $('#documentsList').text('');
+        let documentsList = $('#documentsList');
+        documentsList.text('');
         for (let i = 0; i < documents.length; i++){
             let document = documents[i]['document'];
-            $('#documentsList').append("<div id='" + documents[i]['id']  + "' class='documentBlock'></div>");
-            $('.documentBlock').last().append('<div class="fileTitle">' + documents[i]['document']['mainDocName'] + '</div>')
-            for (let field in document){
-                $('#documentsList' + ' .documentBlock').last()
-                    .addClass('primary').prepend('<div hidden>' + documents[i]['document'][field] + '</div>');
-            }
+            documentsList.append("<div id='" + documents[i]['id']  + "' class='documentBlock'></div>");
+            $('.documentBlock').last().append('<div class="fileTitle">'
+                + documents[i]['document']['mainDocName'] + '</div>');
+            let status = document['status'];
+            $('#documentsList' + ' .documentBlock').last().addClass(status);
             $('#' + documents[i]['id']).append('<div class="btnGroup"><button class="backButton delete" ' +
                 'onclick="deleteDocument($(this));">' +
                 '<i class="fas fa-trash-alt"></i></button> ' +
                 '<button class="backButton status" onclick="changeStatus($(this));">' +
                 '<i class="fas fa-check-square"></i></button>' +
-                '<button class="backButton change" onclick="location.hash = \'#addDocument\'">' +
+                '<button class="backButton change" onclick="loadDocument($(this).parent().parent());">' +
                 '<i class="fas fa-pencil-alt"></i></button></div>');
         }
     })
+}
+
+function loadDocument(node){
+    let id = node.attr('id');
+    idForUpdate = parseInt(id);
+    getDataBaseData('documents').then(result => {
+        let document = result.filter(r => r['id'] === parseInt(id) && r['l'] === currentUser);
+        console.log(document);
+        loadDocumentFormByObject(document[0]['document']);
+        changeHashByUrl('editDocument');
+    })
+}
+
+function loadDocumentFormByObject(obj){
+    for (let field in obj){
+        let f = $("#editDocument form input[name='" + field + "']");
+        f.val(obj[field]);
+        f.trigger('change');
+    }
+}
+
+function changeFileName(node){
+    let fileUploader = node.parent().find('.fileUploader');
+    if (node.parent().find('.docName').val()){
+        fileUploader.addClass('activeUploader');
+        fileUploader.text(node.val());
+    }
 }
 
 function serializeFormToObject(form) {
@@ -299,6 +355,7 @@ function getCookie(name){
 
 function logOut(){
     deleteCookie('authorized');
+    $('.headerBtn').hide();
     currentUser = null;
     location.hash = startPage;
 }
@@ -312,6 +369,11 @@ function loadBlock(){
     let allowedPages = [];
     currentUser ? allowedPages = authorizedPages : allowedPages = pages;
     if (allowedPages.includes(currentPage)) {
+        if (currentPage === '#editDocument' && !idForUpdate){
+            currentPage = authorizedStartPage;
+            showMessage('Вы не выбрали документ для редактирования');
+            location.hash = currentPage;
+        }
         $(currentPage).css('display', 'grid');
         hideBlocks(currentPage);
     }
@@ -363,14 +425,17 @@ function getPreviousState(){
         setCookie('serverSide', '0');
     if (checkSession()) {
         currentPage = authorizedStartPage;
+        $('.headerBtn').show();
         showMessage('Добро пожаловать ' + currentUser, 'msg', false);
         if (!serverSideActive)  // Загружаем список документов из indexedDB только если серверная часть отключена
             loadDocuments();
         else
             $('#documents').find('.secondBlock').removeClass('loadingBlock');
     }
-    else
+    else {
+        $('.headerBtn').hide();
         currentPage = startPage;
+    }
 }
 
 function loadDataBase(){
@@ -392,11 +457,22 @@ function loadDataBase(){
     })
 }
 
-function updateDataBaseData(tableName, data){
+function updateDataBaseData(tableName, data, updateExists = false){
     let t = db.transaction([tableName], 'readwrite');
     let objectStore = t.objectStore(tableName);
-    objectStore.put(data);
-    t.commit();
+    if (updateExists){
+        let o = objectStore.get(idForUpdate);
+        o.onsuccess = function (){
+            data['id'] = idForUpdate;
+            objectStore.put(data);
+            idForUpdate = null;
+            t.commit();
+        }
+    }
+    if (!updateExists) {
+        objectStore.put(data);
+        t.commit();
+    }
 }
 
 function getDataBaseData(tableName){
@@ -423,19 +499,24 @@ function getDataBaseData(tableName){
 }
 
 function fileUpload(node){
-    let fileName = node.find('input[type="file"]')[0].files[0].name;
-    node.find('.fileUploader').addClass('activeUploader').text(fileName);
-    node.find('.docName').val(fileName);
+    let fileName = node.find('input[type="file"]')[0].files;
+    if(fileName.length) {
+        fileName = fileName[0].name;
+        node.find('.fileUploader').addClass('activeUploader').text(fileName);
+        node.find('.docName').val(fileName);
+    }
 }
 
 function deleteDocument(node){
-    let parentNode = node.parent().parent();
-    let id = parentNode.attr('id');
-    parentNode.fadeOut(500, 'linear', function (){
-        parentNode.remove();
-    });
-    parentNode.css('transform', 'translate(50vw, 0px)');
-    deleteDataBaseData('documents', id);
+    if(confirm('Вы уверены что хотите удалить документ?')){
+        let parentNode = node.parent().parent();
+        let id = parentNode.attr('id');
+        parentNode.fadeOut(500, 'linear', function (){
+            parentNode.remove();
+        });
+        parentNode.css('transform', 'translate(50vw, 0px)');
+        deleteDataBaseData('documents', id);
+    }
 }
 
 function deleteDataBaseData(tableName, key){
@@ -447,15 +528,29 @@ function deleteDataBaseData(tableName, key){
 function changeStatus(node){
     let parent = node.parent().parent();
     let parentClass = parent.attr('class');
-    parent.removeClass(parentClass.split(' ', ).pop()).addClass('success');
-    if ($('.documentBlock').length > 1) {
+    let newStatus = null;
+    if (parentClass.split(' ', ).pop() === 'primary')
+        newStatus = 'success';
+    else
+        newStatus = 'primary';
+    let documentBlock = $('.documentBlock');
+    let documentsList = $('#documentsList');
+    parent.removeClass(parentClass.split(' ', ).pop()).addClass(newStatus);
+    if (documentBlock.length > 1 && (parent[0] === documentsList.find('.documentBlock')[documentsList.length - 1])) {
         parent.fadeOut(500, 'linear', function () {
-            $('#documentsList').append(parent);
+            documentsList.append(parent);
             parent.show();
             parent.css('transform', 'translate(0px, 0px)');
-            $('.documentBlock').css('transform', 'translate(0px, 0px)');
+            documentBlock.css('transform', 'translate(0px, 0px)');
         });
-        $('.documentBlock').css('transform', 'translate(0px, 15px)');
+        documentBlock.css('transform', 'translate(0px, 15px)');
         parent.css('transform', 'translate(50vw, 0px)');
     }
+    let id = parent.attr('id');
+    idForUpdate = parseInt(id);
+    getDataBaseData('documents').then(result => {
+        let document = result.filter(r => r['id'] === parseInt(id) && r['l'] === currentUser)[0];
+        document['document'].status = newStatus;
+        updateDataBaseData('documents', document, true);
+    })
 }
