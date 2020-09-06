@@ -19,7 +19,7 @@ body{
 }
 #signIn, #signUp, #settings, #tables, #addDocument, #documents, #editDocument{
     margin-bottom: 50px;
-    margin-top: 50px;
+    margin-top: 70px;
     display: none;
     width: 100%;
     animation-name: fadeIn;
@@ -31,18 +31,45 @@ body{
     100%{opacity: 1;}
 }
 
-form {
+form{
     display: grid;
     width: 500px;
     margin: auto;
     max-width: 90vw;
 }
-form input{
+form input, select, .select{
     text-align: center;
     height: 35px;
     border: 1px dashed lightgray;
     margin-bottom: 10px;
+    width: 100%;
     outline: none;
+}
+form select{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: none;
+}
+.select {
+    margin-right: 10px;
+    position: relative;
+    display: inline-block;
+}
+.select:after {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    content: "\f0dd";
+    padding: 0 8px;
+    font-size: 12px;
+    position: absolute;
+    right: 8px;
+    top: 25%;
+    z-index: 1;
+    text-align: center;
+    width: 10%;
+    height: 100%;
+    pointer-events: none;
+    box-sizing: border-box;
 }
 form button, .backButton{
     min-height: 50px;
@@ -117,25 +144,35 @@ form button:hover, .backButton:hover{
     background: #bbbbbb1a;
     box-shadow: 1px 1px 1px 1px lightgray;
 }
-.headerBtn, .headerBtnPrim{
-    display: flex;
+.buttons{
+    display: inline-flex;
     position: fixed;
-    width: 50%;
-    top: 10px;
-    height: 25px;
-    z-index: 999;
+    width: 100%;
+    height: 50px;
+    align-items: center;
+    z-index: 900;
+    background: whitesmoke;
+    box-shadow: 1px 1px 1px lightgray;
+    transform: translateY(-100px);
+    transition: transform 2s ease;
 }
 .headerBtn{
+    height: 25px;
+    width: 50%;
+    display: flex;
     justify-content: flex-end;
-    right: 20px;
+    margin-right: 10px;
 }
 .headerBtnPrim{
+    height: 25px;
+    width: 50%;
+    display: flex;
     justify-content: flex-start;
-    left: 20px;
+    margin-left: 10px;
 }
 .headerBtnPrim button{
     margin-left: 5px;
-    width: 50px;
+    min-width: 50px;
 }
 .headerBtnPrim .active{
     color: #00af86;
@@ -150,7 +187,7 @@ form button:hover, .backButton:hover{
 .fileUploader{
     height: 50px;
     width: 100%;
-    margin: 15px auto 15px  auto;
+    margin: auto;
     background: white;
     border: 2px dashed #bbb8b8;
     border-radius: 15px;
@@ -169,15 +206,35 @@ form button:hover, .backButton:hover{
     background: #d9ffd9;
 }
 form label{
-    margin-bottom: 20px;
+    font-weight: bold;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.timeUntil{
+    display: block;
+    font-size: .7rem;
+}
+label i{
+    margin-right: -40px;
+    min-width: 35px;
+    position: relative;
+    z-index: 1;
+    background: white;
 }
 .group{
     display: grid;
     width: 90%;
     margin: auto;
     background: #fff;
-    padding: 20px;
+    padding: 5px;
+}
+.g-outside{
     margin-bottom: 10px;
+    padding: 20px;
+}
+.d-flex{
+    display: flex;
+    justify-content: center;
 }
 .documentBlock{
     display: grid;
@@ -188,6 +245,14 @@ form label{
     margin-bottom: 20px;
     border-radius: 20px;
     transition: transform .5s ease;
+    opacity: .5;
+}
+.documentBlock:hover{
+    opacity: .9;
+}
+.timeBlock{
+    position: absolute;
+    color: white;
 }
 .btnGroup{
     display: flex;
@@ -259,4 +324,14 @@ form .backButton{
     font-weight: bold;
     color: white;
     text-shadow: 0px 1px 2px black;
+}
+.success .status{
+    color: #525252;
+}
+#currentDate{
+    display: flex;
+    align-items: center;
+}
+#currentDate i{
+    margin-right: 5px;
 }

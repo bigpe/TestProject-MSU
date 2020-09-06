@@ -5,27 +5,30 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src="js/FontAwesome.js" data-auto-replace-svg="nest"></script>
     <script src="js/jquery.js"></script>
     <link rel="stylesheet" href="css/main.css">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="css/all.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap" rel="stylesheet">
     <title>Система для хранения и управления документацией</title>
 </head>
 <body>
 <div class="mainBlock">
     <div id="message"></div>
     <div id="popUp"></div>
-    <div class="headerBtnPrim">
-        <button onclick="window.history.back();">
-            <i class="fas fa-arrow-left"></i>
-        </button>
-        <button class="inactive" id="serverSide" onclick="changeServerSideActive(this)">
-            <i class="fas fa-globe-americas"></i>
-        </button>
-    </div>
-    <div class="headerBtn">
-        <button onclick="location.hash = '#settings'"><i class="fas fa-user-cog"></i></button>
-        <button onclick="location.hash = '#'; logOut()"><i class="fas fa-sign-out-alt"></i></button>
+    <div class="buttons">
+        <div class="headerBtnPrim">
+            <button onclick="window.history.back();">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <button class="inactive" id="serverSide" onclick="changeServerSideActive(this)">
+                <i class="fas fa-globe-americas"></i>
+            </button>
+            <button class="or" id="currentDate"><i class="fas fa-clock"></i></button>
+        </div>
+        <div class="headerBtn">
+            <button onclick="location.hash = '#settings'"><i class="fas fa-user-cog"></i></button>
+            <button onclick="location.hash = '#'; logOut()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
     </div>
     <div id="signIn">
         <div class="secondBlock">
@@ -73,7 +76,9 @@
         <div class="secondBlock">
             <div class="pageTitle">Добавить документ</div>
             <form action="/addDocuments" method="POST" reffer="#documents" onsubmit="return addDocuments($(this));">
-                <div class="group">
+                <input id="date" name="createdDate" hidden>
+                <div class="group g-outside">
+                    <label>Основание</label>
                     <div class="group" onchange="fileUpload($(this));">
                         <input type="text" name="status" value="primary" hidden>
                         <input type="file" accept="application/pdf,application/msword,
@@ -82,13 +87,35 @@
                         <div class="fileUploader" onclick="$(this).parent().find('#mainDoc').click();">+ Документ основание</div>
                         <input type="text" name="mainDocName" onchange="changeFileName($(this));" class="docName" hidden>
                     </div>
-                    <input type="text" name="mainPeriod" placeholder="Переодичность предоставления" required>
+                    <label>Переодичность предоставления</label>
+                    <div class="group d-flex">
+                        <label for="secPeriod"><i class="fas fa-business-time"></i></label>
+                        <div class="select">
+                            <select id="secPeriod" name="mainPeriodT">
+                                <option value="m">Месячная</option>
+                                <option value="q">Квартальная</option>
+                            </select>
+                        </div>
+                        <input type="number" name="mainPeriodF" max="31" min="1" placeholder="Какого числа?" required>
+                    </div>
                     <label>Контактное лицо от учереждения</label>
-                    <input type="text" name="fullName" placeholder="ФИО" required>
-                    <input type="text" name="phone" placeholder="Телефон" required>
-                    <input type="text" name="email" placeholder="Почта" required>
+                    <div class="group">
+                        <div class="d-flex">
+                            <label for="fullName"><i class="fas fa-user-tie"></i></label>
+                            <input id="fullName" type="text" name="fullName" placeholder="ФИО" required>
+                        </div>
+                        <div class="d-flex">
+                            <label for="phone"><i class="fas fa-phone"></i></label>
+                            <input id="phone" type="text" name="phone" placeholder="Телефон" required>
+                        </div>
+                        <div class="d-flex">
+                            <label for="email"><i class="fas fa-envelope"></i></label>
+                            <input id="email" type="text" name="email" placeholder="Почта" required>
+                        </div>
+                    </div>
                 </div>
-                <div class="group">
+                <div class="group g-outside">
+                    <label>Отчет</label>
                     <div class="group" onchange="fileUpload($(this));">
                         <input type="file" accept="application/pdf,application/msword,
                         application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -96,9 +123,27 @@
                         <div class="fileUploader" onclick="$(this).parent().find('#secDoc').click();">+ Отчетный документ</div>
                         <input type="text" name="secDocName" onchange="changeFileName($(this));" class="docName" hidden>
                     </div>
-                    <input type="text" name="secPeriod" placeholder="Переодичность предоставления" required>
-                    <input type="text" name="destination" placeholder="Адресат" required>
-                    <input type="text" name="performer" placeholder="Текущий исполнитель" required>
+                    <label>Переодичность предоставления</label>
+                    <div class="group d-flex">
+                        <label for="secPeriod"><i class="fas fa-business-time"></i></label>
+                        <div class="select">
+                            <select id="secPeriod" name="secPeriodT">
+                                <option value="m">Месячная</option>
+                                <option value="q">Квартальная</option>
+                            </select>
+                        </div>
+                        <input type="text" name="secPeriodF" max="31" min="1" placeholder="Какого числа?" required>
+                    </div>
+                    <div class="group">
+                        <dif class="d-flex">
+                            <label for="destination"><i class="fas fa-user-check"></i></label>
+                            <input  id="destination" type="text" name="destination" placeholder="Адресат">
+                        </dif>
+                        <dif class="d-flex">
+                            <label for="performer"><i class="fas fa-user-edit"></i></label>
+                            <input id="performer" type="text" name="performer" placeholder="Текущий исполнитель">
+                        </dif>
+                    </div>
                 </div>
                 <button type="submit">Добавить документ <i class="fas fa-file-alt"></i></button>
             </form>
@@ -113,7 +158,40 @@
         <div class="secondBlock">
             <div class="pageTitle">Обновить документ</div>
             <form action="/editDocument" method="POST" reffer="#documents" onsubmit="return editDocument($(this));">
-                <div class="group">
+                <input id="date" name="createdDate" hidden>
+                <div class="group g-outside">
+                    <label>Отчет</label>
+                    <div class="group" onchange="fileUpload($(this));">
+                        <input type="file" accept="application/pdf,application/msword,
+                        application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                               name="secDoc" id="secDoc" hidden>
+                        <div class="fileUploader" onclick="$(this).parent().find('#secDoc').click();">+ Отчетный документ</div>
+                        <input type="text" name="secDocName" onchange="changeFileName($(this));" class="docName" hidden>
+                    </div>
+                    <label>Переодичность предоставления</label>
+                    <div class="group d-flex">
+                        <label for="secPeriod"><i class="fas fa-business-time"></i></label>
+                        <div class="select">
+                            <select id="secPeriod" name="secPeriodT">
+                                <option value="m">Месячная</option>
+                                <option value="q">Квартальная</option>
+                            </select>
+                        </div>
+                        <input type="text" name="secPeriodF" max="31" min="1" placeholder="Какого числа?" required>
+                    </div>
+                    <div class="group">
+                        <dif class="d-flex">
+                            <label for="destination"><i class="fas fa-user-check"></i></label>
+                            <input  id="destination" type="text" name="destination" placeholder="Адресат">
+                        </dif>
+                        <dif class="d-flex">
+                            <label for="performer"><i class="fas fa-user-edit"></i></label>
+                            <input id="performer" type="text" name="performer" placeholder="Текущий исполнитель">
+                        </dif>
+                    </div>
+                </div>
+                <div class="group g-outside">
+                    <label>Основание</label>
                     <div class="group" onchange="fileUpload($(this));">
                         <input type="text" name="status" value="primary" hidden>
                         <input type="file" accept="application/pdf,application/msword,
@@ -122,23 +200,32 @@
                         <div class="fileUploader" onclick="$(this).parent().find('#mainDoc').click();">+ Документ основание</div>
                         <input type="text" name="mainDocName" onchange="changeFileName($(this));" class="docName" hidden>
                     </div>
-                    <input type="text" name="mainPeriod" placeholder="Переодичность предоставления" required>
-                    <label>Контактное лицо от учереждения</label>
-                    <input type="text" name="fullName" placeholder="ФИО" required>
-                    <input type="text" name="phone" placeholder="Телефон" required>
-                    <input type="text" name="email" placeholder="Почта" required>
-                </div>
-                <div class="group">
-                    <div class="group" onchange="fileUpload($(this));">
-                        <input type="file" accept="application/pdf,application/msword,
-                        application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                               name="secDoc" id="secDoc" hidden>
-                        <div class="fileUploader" onclick="$(this).parent().find('#secDoc').click();">+ Отчетный документ</div>
-                        <input type="text" name="secDocName" onchange="changeFileName($(this));" class="docName" hidden>
+                    <label>Переодичность предоставления</label>
+                    <div class="group d-flex">
+                        <label for="secPeriod"><i class="fas fa-business-time"></i></label>
+                        <div class="select">
+                            <select id="secPeriod" name="mainPeriodT">
+                                <option value="m">Месячная</option>
+                                <option value="q">Квартальная</option>
+                            </select>
+                        </div>
+                        <input type="number" name="mainPeriodF" max="31" min="1" placeholder="Какого числа?" required>
                     </div>
-                    <input type="text" name="secPeriod" placeholder="Переодичность предоставления" required>
-                    <input type="text" name="destination" placeholder="Адресат" required>
-                    <input type="text" name="performer" placeholder="Текущий исполнитель" required>
+                    <label>Контактное лицо от учереждения</label>
+                    <div class="group">
+                        <div class="d-flex">
+                            <label for="fullName"><i class="fas fa-user-tie"></i></label>
+                            <input id="fullName" type="text" name="fullName" placeholder="ФИО" required>
+                        </div>
+                        <div class="d-flex">
+                            <label for="phone"><i class="fas fa-phone"></i></label>
+                            <input id="phone" type="text" name="phone" placeholder="Телефон" required>
+                        </div>
+                        <div class="d-flex">
+                            <label for="email"><i class="fas fa-envelope"></i></label>
+                            <input id="email" type="text" name="email" placeholder="Почта" required>
+                        </div>
+                    </div>
                 </div>
                 <button type="submit">Обновить документ <i class="fas fa-file-alt"></i></button>
             </form>

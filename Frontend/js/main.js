@@ -8,44 +8,37 @@ var currentPage;
 var serverSideActive = false; // Когда серверная часть будет включена, приложение начнет отправлять пост запросы
 var db;
 var idForUpdate = null;
-loadDataBase().then(result => {
-    db = result;
-})
-getPreviousState(); // Получаем начальное состояние приложения в заивисмости от наличия сессии
-loadBlock();  // Загружаем первоначальный блок
+var currentDate = new Date();  // Указать другую дату для тестирования статуса заявок
+// (прим. Date(2020, 5, 10)) январь - 0
+
+$(window).on('load', function(){
+    loadDataBase().then(result => {
+        db = result;  // Инициализируем базу данных
+    });
+    getPreviousState(); // Получаем начальное состояние приложения в заивисмости от наличия сессии
+    loadBlock();  // Загружаем первоначальный блок
+    loadDate();  // Блок с текущей датой
+    $('.buttons').css('transform', 'translateY(0px)');
+});
+
+function loadDate(){
+    $('#currentDate').html($('#currentDate').html() + currentDate.toDateInputValue());
+}
 
 $(window).on('hashchange', function() {
-    loadBlock();
+    loadBlock();  // Если хеш страницы меняется, вызываем функцию загрузчика контроллеров
 });
 
 
-// Скрываем всплывающее сообщение если пользователь производит клик вне его области
-$(document).mouseup(function (e){
-		let obj = $('#popUp');
-		if (!obj.is(e.target) && !obj.has(e.target).length) {
+$(window).on('mouseup', function (e){
+		let obj = $('#popUp'); // Скрываем всплывающее сообщение если пользователь
+		if (!obj.is(e.target) && !obj.has(e.target).length) { // производит клик вне его области
 		    obj.removeClass('showBlock');
             obj.hide();
         }
-	});
+});
 
-function changeServerSideActive(node){
-    let status = node.getAttribute('class');
-    if (status === 'active') {
-        setCookie('serverSide', '0');
-        node.setAttribute('class', 'inactive');
-        showMessage('Серверная часть выключена', 'err', false);
-        serverSideActive = false;
-        loadDocuments();
-    }
-    if (status === 'inactive') {
-        setCookie('serverSide', '1');
-        node.setAttribute('class', 'active');
-        showMessage('Серверная часть включена', 'msg', false);
-        serverSideActive = true;
-    }
-}
-
-// Controllers
+// Контроллеры
 function signUp(node){
     let login = $("input[type='text']", node)[0].value;
     let password = $("input[type='password']", node)[0].value;
@@ -79,19 +72,25 @@ function settings(node){
 
 function addDocuments(node){
     let mainFile = node.find('input[name="mainDocName"]').val();
-    let secFile = node.find('#secDoc')[0].files.length;
     if (!mainFile){
         showMessage('Вы должны предоставить документ основание');
         return false;
     }
+    node.find('#date').val(currentDate.toDateInputValue());  // Сохраняем текущее время
     let formData = serializeFormToObject(node);
     if (saveDocument(formData))
         changeHashByNodeReff(node[0]);
     return false;
 }
+
+Date.prototype.toDateInputValue = (function() {
+    let local = new Date(this);
+    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+    return local.toJSON().slice(0,10);
+});
+
 function editDocument(node){
     let mainFile = node.find('input[name="mainDocName"]').val();
-    let secFile = node.find('#secDoc')[0].files.length;
     if (!mainFile){
         showMessage('Вы должны предоставить документ основание');
         return false;
@@ -100,6 +99,24 @@ function editDocument(node){
     if (updateDocument(formData))
         changeHashByNodeReff(node[0]);
     return false;
+}
+// Контроллеры
+
+function changeServerSideActive(node){
+    let status = node.getAttribute('class');
+    if (status === 'active') {
+        setCookie('serverSide', '0');
+        node.setAttribute('class', 'inactive');
+        showMessage('Серверная часть выключена', 'err', false);
+        serverSideActive = false;
+        loadDocuments();
+    }
+    if (status === 'inactive') {
+        setCookie('serverSide', '1');
+        node.setAttribute('class', 'active');
+        showMessage('Серверная часть включена', 'msg', false);
+        serverSideActive = true;
+    }
 }
 
 function updateDocument(formData){
@@ -123,6 +140,8 @@ function saveDocument(formData){
         loadDocuments();
         showMessage('Документ успешно сохранен', 'msg', false);
         $(currentPage + ' form')[0].reset();
+        $(currentPage + ' .fileUploader').first().text('+ Документ основание').removeClass('activeUploader');
+        $(currentPage + ' .fileUploader').last().text('+ Отчетный документ').removeClass('activeUploader');
         return true;
     }
     if (serverSideActive){
@@ -133,9 +152,17 @@ function saveDocument(formData){
 }
 
 function loadDocuments(){
+    let periods = {'m': 'М.', 'q': 'К.', 'y': 'Г.'};
     $('#documents').find('.secondBlock').addClass('loadingBlock');
     getDataBaseData('documents').then(result =>{ // Получаем значения
         let documents = result.filter(r => r['l'] === currentUser); // документов для текущего пользователя
+        documents = documents.sort(function (a, b){  // Сортируем по статусу
+            if (a['document']['status'] > b['document']['status'])
+                return 1;
+            if (a['document']['status'] < b['document']['status'])
+                return -1;
+            return 0;
+        })
         let documentsList = $('#documentsList');
         documentsList.text('');
         for (let i = 0; i < documents.length; i++){
@@ -144,16 +171,54 @@ function loadDocuments(){
             $('.documentBlock').last().append('<div class="fileTitle">'
                 + documents[i]['document']['mainDocName'] + '</div>');
             let status = document['status'];
+            let createdDate = parseISOString(document['createdDate']);
+            let dateUntil = createdDate.getDate() + '.' + createdDate.getMonth() + '.' + createdDate.getFullYear();
+            let newStatus = changeStatusByDate(createdDate, document['secPeriodT']);
+            newStatus ? status = newStatus : null;
             $('#documentsList' + ' .documentBlock').last().addClass(status);
             $('#' + documents[i]['id']).append('<div class="btnGroup"><button class="backButton delete" ' +
                 'onclick="deleteDocument($(this));">' +
                 '<i class="fas fa-trash-alt"></i></button> ' +
                 '<button class="backButton status" onclick="changeStatus($(this));">' +
-                '<i class="fas fa-check-square"></i></button>' +
+                '<i class="fas fa-check"></i></button>' +
                 '<button class="backButton change" onclick="loadDocument($(this).parent().parent());">' +
-                '<i class="fas fa-pencil-alt"></i></button></div>');
+                '<i class="fas fa-pencil-alt"></i></button></div>' +
+                '<div class="timeBlock"><i class="fas fa-business-time"></i> '
+                + periods[document['secPeriodT']] + ' ' + document['secPeriodF'] +'' +
+                '<span class="timeUntil">' + dateUntil + '</span>' +
+                '</div>');
         }
     })
+}
+
+function changeStatusByDate(createdDate, type){
+    // Статусы
+    // Primary - обычный, Success - Выполненный, Warning - скоро истечет, Danger - нужно срочно сдавать
+    if (type === 'q') {  // Обработчик квартальных отчетов
+        let quarter = Math.floor(createdDate.getMonth() / 3 + 1);
+        let currentQuarter = Math.floor(currentDate.getMonth() / 3 + 1);
+        if (quarter === currentQuarter){
+            if (createdDate.getMonth() === currentDate.getMonth()){
+                if (currentDate.getDate() + 7 >= createdDate.getDate())
+                    return "danger"; // Выставляем статус если до подачи отчета осталась неделя
+                return 'warning';  // Выставляем статус если до подачи отчета остался месяц
+            }
+        }
+    }
+    if (type === 'm'){  // Обработчик месячных отчетов
+        if (currentDate.getDate() + 7 >= createdDate.getDate())
+            return 'danger'; // Выставляем статус если до подачи отчета осталась неделя
+        else
+            return 'warning';
+    }
+    return false;
+}
+
+function parseISOString(s) {
+  let n = s.split(/\D+/);
+  for (let i in n)
+      n[i] = parseInt(n[i]);
+  return new Date(n[0], --n[1], n[2]);
 }
 
 function loadDocument(node){
@@ -161,7 +226,6 @@ function loadDocument(node){
     idForUpdate = parseInt(id);
     getDataBaseData('documents').then(result => {
         let document = result.filter(r => r['id'] === parseInt(id) && r['l'] === currentUser);
-        console.log(document);
         loadDocumentFormByObject(document[0]['document']);
         changeHashByUrl('editDocument');
     })
@@ -170,6 +234,8 @@ function loadDocument(node){
 function loadDocumentFormByObject(obj){
     for (let field in obj){
         let f = $("#editDocument form input[name='" + field + "']");
+        if (field === 'secPeriodT' || field === 'mainPeriodT')
+            f = $("#editDocument form select[name='" + field + "']");
         f.val(obj[field]);
         f.trigger('change');
     }
@@ -193,8 +259,6 @@ function serializeFormToObject(form) {
     formObject = {'l': currentUser, 'document': formObject};
     return formObject;
 }
-// Controllers
-
 
 function showMessage(text, type = 'err', popUp=true){
     let types = {  // Карта с типом сообщения, цветом и префиксом
@@ -283,37 +347,6 @@ function authUser(login, password){
         sendToBack(form); // Отсылаем форму
     }
     return false;
-}
-
-function sendToBack(form){
-    let url = form.attr('action');
-    let reffer = form.attr('reffer');
-    $.ajax({
-            url: url,
-            method: 'POST',
-            data: form.serialize(),
-            complete: function (response) {
-                let data;
-                try {  // Пытаемся спарсить JSON из ответа
-                    data = JSON.parse(response.responseText);
-                }
-                catch (e) {
-                    data = null;
-                }
-                if (data) { // Серверу необходимо установить куки для корректной работы в формате
-                    // authorized=Логин пользователя
-                    let message = data['message'];
-                    let status = data['status'];
-                    if (status == '0') {  // Если статус с бэка 0 - значит все прошло успешно
-                        showMessage(message, 'msg', false); // Выводим полученное сообщение
-                        location.hash = reffer;
-                    }
-                    showMessage(message);
-                }
-                else
-                    showMessage('Ошибка сервера');
-            }
-        })
 }
 
 function checkNotEmpty(label, data){
@@ -438,6 +471,61 @@ function getPreviousState(){
     }
 }
 
+function fileUpload(node){
+    let fileName = node.find('input[type="file"]')[0].files;
+    if(fileName.length) {
+        fileName = fileName[0].name;
+        node.find('.fileUploader').addClass('activeUploader').text(fileName);
+        node.find('.docName').val(fileName);
+    }
+}
+
+function deleteDocument(node){
+    if(confirm('Вы уверены что хотите удалить документ?')){
+        let parentNode = node.parent().parent();
+        let id = parentNode.attr('id');
+        parentNode.fadeOut(500, 'linear', function (){
+            parentNode.remove();
+        });
+        parentNode.find('.timeBlock').hide();
+        parentNode.css('transform', 'translate(50vw, 0px)');
+        deleteDataBaseData('documents', id);
+    }
+}
+
+function changeStatus(node){
+    let parent = node.parent().parent();
+    let parentClass = parent.attr('class');
+    let newStatus = null;
+    if (parentClass.split(' ', ).pop() === 'primary')
+        newStatus = 'success';
+    else
+        newStatus = 'primary';
+    let documentBlock = $('.documentBlock');
+    let documentsList = $('#documentsList');
+    let lastBlock = documentsList.find('.documentBlock').last()[0];
+    parent.removeClass(parentClass.split(' ', ).pop()).addClass(newStatus);
+    if (documentBlock.length > 1 && newStatus === 'success'
+        && (parent[0] !== lastBlock)) {
+        parent.fadeOut(500, 'linear', function () {
+            documentsList.append(parent);
+            parent.show();
+            parent.css('transform', 'translate(0px, 0px)');
+            documentBlock.css('transform', 'translate(0px, 0px)');
+        });
+        documentBlock.css('transform', 'translate(0px, 15px)');
+        parent.css('transform', 'translate(50vw, 0px)');
+    }
+    let id = parent.attr('id');
+    idForUpdate = parseInt(id);
+    getDataBaseData('documents').then(result => {
+        let document = result.filter(r => r['id'] === parseInt(id) && r['l'] === currentUser)[0];
+        document['document'].status = newStatus;
+        updateDataBaseData('documents', document, true);
+    })
+}
+
+// Функции для работы с БД
 function loadDataBase(){
     return new Promise(resolve => {
         let request = window.indexedDB.open('documents', 1);
@@ -455,24 +543,6 @@ function loadDataBase(){
             resolve(event.target.result);
         };
     })
-}
-
-function updateDataBaseData(tableName, data, updateExists = false){
-    let t = db.transaction([tableName], 'readwrite');
-    let objectStore = t.objectStore(tableName);
-    if (updateExists){
-        let o = objectStore.get(idForUpdate);
-        o.onsuccess = function (){
-            data['id'] = idForUpdate;
-            objectStore.put(data);
-            idForUpdate = null;
-            t.commit();
-        }
-    }
-    if (!updateExists) {
-        objectStore.put(data);
-        t.commit();
-    }
 }
 
 function getDataBaseData(tableName){
@@ -498,24 +568,21 @@ function getDataBaseData(tableName){
     })
 }
 
-function fileUpload(node){
-    let fileName = node.find('input[type="file"]')[0].files;
-    if(fileName.length) {
-        fileName = fileName[0].name;
-        node.find('.fileUploader').addClass('activeUploader').text(fileName);
-        node.find('.docName').val(fileName);
+function updateDataBaseData(tableName, data, updateExists = false){
+    let t = db.transaction([tableName], 'readwrite');
+    let objectStore = t.objectStore(tableName);
+    if (updateExists){
+        let o = objectStore.get(idForUpdate);
+        o.onsuccess = function (){
+            data['id'] = idForUpdate;
+            objectStore.put(data);
+            idForUpdate = null;
+            t.commit();
+        }
     }
-}
-
-function deleteDocument(node){
-    if(confirm('Вы уверены что хотите удалить документ?')){
-        let parentNode = node.parent().parent();
-        let id = parentNode.attr('id');
-        parentNode.fadeOut(500, 'linear', function (){
-            parentNode.remove();
-        });
-        parentNode.css('transform', 'translate(50vw, 0px)');
-        deleteDataBaseData('documents', id);
+    if (!updateExists) {
+        objectStore.put(data);
+        t.commit();
     }
 }
 
@@ -525,32 +592,37 @@ function deleteDataBaseData(tableName, key){
     objectStore.delete(parseInt(key));
     t.commit();
 }
-function changeStatus(node){
-    let parent = node.parent().parent();
-    let parentClass = parent.attr('class');
-    let newStatus = null;
-    if (parentClass.split(' ', ).pop() === 'primary')
-        newStatus = 'success';
-    else
-        newStatus = 'primary';
-    let documentBlock = $('.documentBlock');
-    let documentsList = $('#documentsList');
-    parent.removeClass(parentClass.split(' ', ).pop()).addClass(newStatus);
-    if (documentBlock.length > 1 && (parent[0] === documentsList.find('.documentBlock')[documentsList.length - 1])) {
-        parent.fadeOut(500, 'linear', function () {
-            documentsList.append(parent);
-            parent.show();
-            parent.css('transform', 'translate(0px, 0px)');
-            documentBlock.css('transform', 'translate(0px, 0px)');
-        });
-        documentBlock.css('transform', 'translate(0px, 15px)');
-        parent.css('transform', 'translate(50vw, 0px)');
-    }
-    let id = parent.attr('id');
-    idForUpdate = parseInt(id);
-    getDataBaseData('documents').then(result => {
-        let document = result.filter(r => r['id'] === parseInt(id) && r['l'] === currentUser)[0];
-        document['document'].status = newStatus;
-        updateDataBaseData('documents', document, true);
-    })
+// Функции для работы с БД
+
+// Функции для бэкенда
+function sendToBack(form){
+    let url = form.attr('action');
+    let reffer = form.attr('reffer');
+    $.ajax({
+            url: url,
+            method: 'POST',
+            data: form.serialize(),
+            complete: function (response) {
+                let data;
+                try {  // Пытаемся спарсить JSON из ответа
+                    data = JSON.parse(response.responseText);
+                }
+                catch (e) {
+                    data = null;
+                }
+                if (data) { // Серверу необходимо установить куки для корректной работы в формате
+                    // authorized=Логин пользователя
+                    let message = data['message'];
+                    let status = data['status'];
+                    if (status == '0') {  // Если статус с бэка 0 - значит все прошло успешно
+                        showMessage(message, 'msg', false); // Выводим полученное сообщение
+                        location.hash = reffer;
+                    }
+                    showMessage(message);
+                }
+                else
+                    showMessage('Ошибка сервера');
+            }
+        })
 }
+// Функции для бэкенда
