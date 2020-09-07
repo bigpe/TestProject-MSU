@@ -232,6 +232,7 @@ label i{
 .g-outside{
     margin-bottom: 10px;
     padding: 20px;
+    border-radius: 10px;
 }
 .d-flex{
     display: flex;
