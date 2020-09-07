@@ -213,6 +213,7 @@ form label{
 .timeUntil{
     display: block;
     font-size: .7rem;
+    margin-left: 5px;
 }
 label i{
     margin-right: -40px;
@@ -334,4 +335,7 @@ form .backButton{
 }
 #currentDate i{
     margin-right: 5px;
+}
+.smallTitle{
+    font-size: .6rem;
 }

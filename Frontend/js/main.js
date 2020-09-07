@@ -9,7 +9,7 @@ var serverSideActive = false; // Когда серверная часть буд
 var db;
 var idForUpdate = null;
 var currentDate = new Date();  // Указать другую дату для тестирования статуса заявок
-// (прим. Date(2020, 5, 10)) январь - 0
+// (прим. Date(YYYY, M, D)) нумерация месяцев начинается с 0
 
 $(window).on('load', function(){
     loadDataBase().then(result => {
@@ -18,17 +18,11 @@ $(window).on('load', function(){
     getPreviousState(); // Получаем начальное состояние приложения в заивисмости от наличия сессии
     loadBlock();  // Загружаем первоначальный блок
     loadDate();  // Блок с текущей датой
-    $('.buttons').css('transform', 'translateY(0px)');
 });
-
-function loadDate(){
-    $('#currentDate').html($('#currentDate').html() + currentDate.toDateInputValue());
-}
 
 $(window).on('hashchange', function() {
     loadBlock();  // Если хеш страницы меняется, вызываем функцию загрузчика контроллеров
 });
-
 
 $(window).on('mouseup', function (e){
 		let obj = $('#popUp'); // Скрываем всплывающее сообщение если пользователь
@@ -76,7 +70,10 @@ function addDocuments(node){
         showMessage('Вы должны предоставить документ основание');
         return false;
     }
-    node.find('#date').val(currentDate.toDateInputValue());  // Сохраняем текущее время
+    let d = parseInt($(currentPage + ' input[name="secPeriodF"]').val());
+    let cd = currentDate.getDate();
+    node.find('#date').val(currentDate.getFullYear() + '-' +
+        parseInt(currentDate.getMonth() + 1) + '-' + currentDate.getDate());
     let formData = serializeFormToObject(node);
     if (saveDocument(formData))
         changeHashByNodeReff(node[0]);
@@ -101,6 +98,11 @@ function editDocument(node){
     return false;
 }
 // Контроллеры
+
+function loadDate(){
+    $('#currentDate').html($('#currentDate').html() + currentDate.getDate() + '/'
+        + parseInt(currentDate.getMonth() + 1) + '/' + currentDate.getFullYear());
+}
 
 function changeServerSideActive(node){
     let status = node.getAttribute('class');
@@ -152,7 +154,7 @@ function saveDocument(formData){
 }
 
 function loadDocuments(){
-    let periods = {'m': 'М.', 'q': 'К.', 'y': 'Г.'};
+    let periods = {'m': 'М', 'q': 'К'};
     $('#documents').find('.secondBlock').addClass('loadingBlock');
     getDataBaseData('documents').then(result =>{ // Получаем значения
         let documents = result.filter(r => r['l'] === currentUser); // документов для текущего пользователя
@@ -172,9 +174,8 @@ function loadDocuments(){
                 + documents[i]['document']['mainDocName'] + '</div>');
             let status = document['status'];
             let createdDate = parseISOString(document['createdDate']);
-            let dateUntil = createdDate.getDate() + '.' + createdDate.getMonth() + '.' + createdDate.getFullYear();
-            let newStatus = changeStatusByDate(createdDate, document['secPeriodT']);
-            newStatus ? status = newStatus : null;
+            let newStatus = changeStatusByDate(createdDate, document['secPeriodT'], document['secPeriodF']);
+            status !== 'success' ? status = newStatus['status'] : null;
             $('#documentsList' + ' .documentBlock').last().addClass(status);
             $('#' + documents[i]['id']).append('<div class="btnGroup"><button class="backButton delete" ' +
                 'onclick="deleteDocument($(this));">' +
@@ -183,35 +184,79 @@ function loadDocuments(){
                 '<i class="fas fa-check"></i></button>' +
                 '<button class="backButton change" onclick="loadDocument($(this).parent().parent());">' +
                 '<i class="fas fa-pencil-alt"></i></button></div>' +
-                '<div class="timeBlock"><i class="fas fa-business-time"></i> '
-                + periods[document['secPeriodT']] + ' ' + document['secPeriodF'] +'' +
-                '<span class="timeUntil">' + dateUntil + '</span>' +
+                '<div class="timeBlock"><i class="fas fa-file-alt"></i> '
+                + periods[document['secPeriodT']] +
+                '<span class="timeUntil"><i class="fas fa-clock"></i> ' + newStatus['nextReport'] + '</span>' +
                 '</div>');
         }
     })
 }
 
-function changeStatusByDate(createdDate, type){
+function changeStatusByDate(createdDate, type, day){
     // Статусы
     // Primary - обычный, Success - Выполненный, Warning - скоро истечет, Danger - нужно срочно сдавать
+    let months = [];
+    let limit;
+    let step;
+    let status;
+    let month = currentDate.getMonth();
     if (type === 'q') {  // Обработчик квартальных отчетов
-        let quarter = Math.floor(createdDate.getMonth() / 3 + 1);
-        let currentQuarter = Math.floor(currentDate.getMonth() / 3 + 1);
-        if (quarter === currentQuarter){
-            if (createdDate.getMonth() === currentDate.getMonth()){
-                if (currentDate.getDate() + 7 >= createdDate.getDate())
-                    return "danger"; // Выставляем статус если до подачи отчета осталась неделя
-                return 'warning';  // Выставляем статус если до подачи отчета остался месяц
-            }
+        limit = 4;
+        step = 3;
+    }
+    if (type === 'm') {  // Обработчик месячных отчетов
+        limit = 12;
+        step = 1;
+    }
+    if (limit && step){
+        for (let i = 0; i < limit; i++){
+            months.push(month);
+            month += step;
+            month > 11 ? month -= 12: null;
         }
     }
-    if (type === 'm'){  // Обработчик месячных отчетов
-        if (currentDate.getDate() + 7 >= createdDate.getDate())
-            return 'danger'; // Выставляем статус если до подачи отчета осталась неделя
-        else
-            return 'warning';
+    let r = 0;
+    let y = 0;
+    let tm = 0;
+    for (let i in months){  // Составляем дату следующего отчета
+        let m;
+        if (type === 'm')
+            m = currentDate.getMonth();
+        if (type === 'q')
+            m = createdDate.getMonth();
+        if (months[i] >= m) {
+            if (months[i] === m)
+                tm = 1;
+            r = months[i];
+            break;
+        }
     }
-    return false;
+    if (!r)
+        y = 1;  // Сдвиг на год
+    let m = 0;
+    if (currentDate.getDate() >= day)
+        m = 1;  // Сдвиг на месяц
+    let result = {'status': 'primary', 'nextReport': day + '/' + parseInt(r + 1 + m)
+            + '/' + parseInt(currentDate.getFullYear() + y)};
+    if (months) {
+        if (type === 'm'){  // Обработчик месячных отчетов
+            if (currentDate.getMonth() === parseInt(r + m)) {
+                if (currentDate.getDate() + 14 >= day)
+                    status = 'warning';
+                if (currentDate.getDate() + 7 >= day)
+                    status = 'danger';
+            }
+        }
+        if (type === 'q') {  // Обработчик квартальных отчетов
+            if (tm)
+                status = 'warning'; // В текущем месяце
+            if (currentDate.getDate() + 7 >= day)
+                status = 'danger';
+        }
+    }
+    if (status)
+        result['status'] = status;
+    return result;
 }
 
 function parseISOString(s) {
@@ -469,6 +514,7 @@ function getPreviousState(){
         $('.headerBtn').hide();
         currentPage = startPage;
     }
+    $('.buttons').css('transform', 'translateY(0px)');
 }
 
 function fileUpload(node){
@@ -497,7 +543,7 @@ function changeStatus(node){
     let parent = node.parent().parent();
     let parentClass = parent.attr('class');
     let newStatus = null;
-    if (parentClass.split(' ', ).pop() === 'primary')
+    if (parentClass.split(' ', ).pop() !== 'success')
         newStatus = 'success';
     else
         newStatus = 'primary';
@@ -510,11 +556,15 @@ function changeStatus(node){
         parent.fadeOut(500, 'linear', function () {
             documentsList.append(parent);
             parent.show();
-            parent.css('transform', 'translate(0px, 0px)');
-            documentBlock.css('transform', 'translate(0px, 0px)');
+            parent.css('transform', 'none');
+            documentBlock.css('transform', 'none');
+            setTimeout(function (){
+                $('.timeBlock').fadeIn(100, 'linear');
+            }, 500);
         });
         documentBlock.css('transform', 'translate(0px, 15px)');
         parent.css('transform', 'translate(50vw, 0px)');
+        $('.timeBlock').hide();
     }
     let id = parent.attr('id');
     idForUpdate = parseInt(id);
