@@ -415,8 +415,8 @@ function setCookie(key, value, minutes){
 }
 
 function checkSession(){
-    let c = document.cookie;
-    if (c.search('authorized') !== -1) {
+    let c = getCookie('authorized');
+    if (c != '0') {
         currentUser = getCookie('authorized');
         currentPage = authorizedStartPage;
         location.hash = authorizedStartPage;
@@ -432,14 +432,10 @@ function getCookie(name){
 }
 
 function logOut(){
-    deleteCookie('authorized');
+    document.cookie = 'authorized=0';
     $('.headerBtn').hide();
     currentUser = null;
     location.hash = startPage;
-}
-
-function deleteCookie(name) {
-  document.cookie = name +'=; Path=/; max-age=-1;';
 }
 
 function loadBlock(){
