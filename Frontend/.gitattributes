@@ -2,3 +2,4 @@
 /js/main.js linguist-detectable
 /css/* -linguist-detectable
 /css/main.css linguist-detectable
+/webfonts/* -linguist-detectable
